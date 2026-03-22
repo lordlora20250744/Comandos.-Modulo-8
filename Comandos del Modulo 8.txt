@@ -1,0 +1,185 @@
+PRACTICA 1 - INSTALACION Y CONFIGURACION DE DOCKER + NGINX
+
+ Actualizar el sistema
+sudo apt update && sudo apt upgrade -y
+
+Instalar dependencias necesarias
+sudo apt install -y apt-transport-https ca-certificates curl gnupg lsb-release
+
+Crear carpeta para claves de repositorios
+sudo mkdir -p /etc/apt/keyrings
+
+Descargar y guardar clave GPG de Docker
+curl -fsSL https://download.docker.com/linux/debian/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+
+ Agregar repositorio oficial de Docker (Debian Bookworm)
+echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian bookworm stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+ Actualizar lista de paquetes
+sudo apt update
+
+ Instalar Docker y sus componentes
+sudo apt install -y docker-ce docker-ce-cli containerd.io
+
+ Iniciar y habilitar el servicio Docker
+sudo systemctl start docker
+sudo systemctl enable docker
+
+ Verificar instalación de Docker
+sudo docker run hello-world
+
+ Descargar imagen de NGINX desde Docker Hub
+sudo docker pull nginx
+
+ Crear directorio para volumen persistente
+sudo mkdir -p /home/website
+
+Crear archivo HTML
+sudo nano /home/website/index.html
+
+Crear contenedor NGINX con puerto y volumen
+sudo docker run -d \
+--name mi_nginx \
+-p 8888:80 \
+-v /home/website:/usr/share/nginx/html \
+nginx
+
+ Verificar contenedor en ejecución
+sudo docker ps
+
+Reiniciar
+sudo systemctl restart docker
+
+Acceder desde navegador
+http://127.0.0.1:8888
+___________________________________________________________
+
+PRACTICA 2 - INSTALACION Y CONFIGURACION DE PORTAINER
+
+Descargar imagen de Portainer desde Docker Hub
+sudo docker pull portainer/portainer-ce
+
+Crear volumen para almacenamiento persistente de datos
+sudo docker volume create portainer_data
+
+Crear y ejecutar contenedor de Portainer
+sudo docker run -d \
+--name portainer \
+-p 8000:8000 \
+-p 9443:9443 \
+--restart=always \
+-v /var/run/docker.sock:/var/run/docker.sock \
+-v portainer_data:/data \
+portainer/portainer-ce
+
+Verificar que el contenedor está en ejecución
+sudo docker ps
+
+Reiniciar Portainer en caso de que no cargue correctamente
+sudo docker restart portainer
+
+Acceder a la interfaz web de Portainer (usar HTTPS)
+https://127.0.0.1:9443
+
+CONFIGURACION EN LA INTERFAZ WEB:
+# 1. Crear usuario administrador
+# 2. Seleccionar "Create user"
+# 3. Elegir entorno "Local"
+# 4. Hacer clic en "Live Connect" para conectar con Docker
+
+ Ingresar al entorno local
+Ir a "Containers" para visualizar los contenedores
+
+ Detener el contenedor NGINX desde Portainer
+ Containers -> mi_nginx -> Stop
+
+Verificar desde consola/terminal que el contenedor se detuvo
+sudo docker ps
+
+Comprobar en navegador que el servicio se detuvo
+http://127.0.0.1:8888
+
+(Opcional) Volver a iniciar el contenedor NGINX
+sudo docker start mi_nginx
+
+Verificar nuevamente en navegador
+http://127.0.0.1:8888
+_____________________________________________________________
+
+PRACTICA 3 - DESPLIEGUE DE WORDPRESS CON DOCKER COMPOSE 
+
+Actualizar repositorios
+sudo apt update
+
+ Instalar Docker Compose (plugin oficial)
+sudo apt install -y docker-compose-plugin
+
+Verificar instalación de Docker Compose
+docker compose version
+
+Crear directorio del proyecto
+mkdir wordpress
+cd wordpress
+
+Crear archivo de configuración
+nano docker-compose.yml
+
+ Contenido del archivo docker-compose.yml
+
+services:
+  db:
+    image: mysql:5.7
+    container_name: wordpress_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: wordpress
+      MYSQL_USER: userwp
+      MYSQL_PASSWORD: userpass
+    volumes:
+      - db_data:/var/lib/mysql
+
+  wordpress:
+    image: wordpress:latest
+    container_name: wordpress_app
+    depends_on:
+      - db
+    restart: always
+    ports:
+      - "8081:80"
+    environment:
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_USER: userwp
+      WORDPRESS_DB_PASSWORD: userpass
+      WORDPRESS_DB_NAME: wordpress
+    volumes:
+      - wordpress_data:/var/www/html
+
+volumes:
+  db_data:
+  wordpress_data:
+
+ Desplegar contenedores
+sudo docker compose up -d
+
+Verificar contenedores en ejecución
+sudo docker ps
+
+Acceder a WordPress desde navegador
+http://127.0.0.1:8081
+
+ CONFIGURACION EN EL NAVEGADOR:
+ 1. Seleccionar idioma
+2. Definir:
+ - Título del sitio
+ - Usuario administrador
+ - Contraseña
+- Correo electrónico
+ 3. Marcar opción de no indexar (opcional)
+4. Finalizar instalación
+
+Acceder al panel de administración
+http://127.0.0.1:8081/wp-admin
+
+ Verificar sitio web funcionando
+http://127.0.0.1:8081
