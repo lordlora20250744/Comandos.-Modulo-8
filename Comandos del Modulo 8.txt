@@ -37,6 +37,20 @@ sudo mkdir -p /home/website
 Crear archivo HTML
 sudo nano /home/website/index.html
 
+#Contenido del archivo index.html
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Mi Página</title>
+</head>
+<body>
+    <h1>Nombre: TU NOMBRE</h1>
+    <h2>Matrícula: TU MATRICULA</h2>
+</body>
+</html>
+--------------
+
 Crear contenedor NGINX con puerto y volumen
 sudo docker run -d \
 --name mi_nginx \
